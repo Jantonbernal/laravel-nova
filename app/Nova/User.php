@@ -4,6 +4,8 @@ namespace App\Nova;
 
 use Laravel\Nova\Fields\Email;
 use Laravel\Nova\Fields\ID;
+use Laravel\Nova\Fields\MorphToMany;
+use Laravel\Nova\Fields\Password;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
@@ -43,7 +45,10 @@ class User extends Resource
             ID::make()->sortable(),
             Text::make('name')->sortable()->rules('required', 'max:255'),
             Email::make('Customer Email', 'email')->rules('required', 'max:50', 'email:rfc,dns')->sortable(),
+            Password::make('Password')->rules('required', 'max:255'),
             // Text::make('email')->sortable(),
+            MorphToMany::make('Roles', 'roles', \Sereny\NovaPermissions\Nova\Role::class),
+            MorphToMany::make('Permissions', 'permissions', \Sereny\NovaPermissions\Nova\Permission::class),
         ];
     }
 
