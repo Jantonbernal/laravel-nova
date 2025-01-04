@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -16,8 +17,12 @@ class ProjectFactory extends Factory
      */
     public function definition(): array
     {
+        $users = User::pluck('id');
+        $userSelected = fake()->randomElement($users);
+
         return [
             'name' => fake()->name(),
+            'user_id' => $userSelected,
         ];
     }
 }

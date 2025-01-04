@@ -2,6 +2,7 @@
 
 namespace App\Nova;
 
+use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Email;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\MorphToMany;
@@ -23,7 +24,7 @@ class User extends Resource
      *
      * @var string
      */
-    public static $title = 'id';
+    public static $title = 'email';
 
     /**
      * The columns that should be searched.
@@ -43,9 +44,9 @@ class User extends Resource
     {
         return [
             ID::make()->sortable(),
-            Text::make('name')->sortable()->rules('required', 'max:255'),
-            Email::make('Customer Email', 'email')->rules('required', 'max:50', 'email:rfc,dns')->sortable(),
-            Password::make('Password')->rules('required', 'max:255'),
+            Text::make('Nombre', 'name')->sortable()->rules('required', 'max:255'),
+            Email::make('Cliente', 'email')->rules('required', 'max:50', 'email:rfc,dns')->sortable(),
+            Password::make('Contraseña', 'Password')->rules('required', 'max:255'),
             // Text::make('email')->sortable(),
             MorphToMany::make('Roles', 'roles', \Sereny\NovaPermissions\Nova\Role::class),
             MorphToMany::make('Permissions', 'permissions', \Sereny\NovaPermissions\Nova\Permission::class),
@@ -106,5 +107,62 @@ class User extends Resource
 
             $model->name = 'Duplicate of '.$model->name;
         });
+    }
+
+    /**
+     * Determine if the user can view any models.
+     *
+     * @param  string|null  $model
+     * @return bool
+     */
+    public static function authorizedToViewAny(Request $request)
+    {
+        $user = $request->user();
+
+        return $user && $request->user()->can('viewAnyTask');
+    }
+
+    public function authorizedToView(Request $request)
+    {
+        // Determina si el usuario puede ver este recurso en particular
+        $user = $request->user();
+
+        return $user && $request->user()->can('viewTask', $this->resource);
+    }
+
+    /**
+     * Determine if the user can create models.
+     *
+     * @return bool
+     */
+    public static function authorizedToCreate(Request $request)
+    {
+        $user = $request->user();
+
+        return $user && $request->user()->can('createTask');
+    }
+
+    /**
+     * Determine if the user can update the given model.
+     *
+     * @return bool
+     */
+    public function authorizedToUpdate(Request $request)
+    {
+        $user = $request->user();
+
+        return $user && $request->user()->can('updateTask');
+    }
+
+    /**
+     * Determine if the user can delete the given model.
+     *
+     * @return bool
+     */
+    public function authorizedToDelete(Request $request)
+    {
+        $user = $request->user();
+
+        return $user && $request->user()->can('deleteTask');
     }
 }

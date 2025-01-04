@@ -23,7 +23,7 @@ class Project extends Resource
      *
      * @var string
      */
-    public static $title = 'id';
+    public static $title = 'name';
 
     /**
      * The columns that should be searched.
@@ -43,8 +43,8 @@ class Project extends Resource
     {
         return [
             ID::make()->sortable(),
-            Text::make('name')->sortable()->rules('required', 'max:255'),
-            HasMany::make('Tasks'),
+            Text::make('Nombre', 'name')->sortable()->rules('required', 'max:255'),
+            HasMany::make('Tarea', 'Tasks', Task::class),
         ];
     }
 
@@ -95,8 +95,16 @@ class Project extends Resource
      */
     public function menu(Request $request)
     {
-        return parent::menu($request)->withBadge(function () {
-            return static::$model::count();
+        $user = $request->user();
+
+        // Si no hay usuario autenticado, devolver el menú sin un contador
+        if (! $user) {
+            return parent::menu($request);
+        }
+
+        return parent::menu($request)->withBadge(function () use ($user) {
+            // Filtrar los registros relacionados con el usuario autenticado
+            return static::$model::where('user_id', $user->id)->count();
         });
     }
 
@@ -114,5 +122,74 @@ class Project extends Resource
 
             $model->name = 'Duplicate of '.$model->name;
         });
+    }
+
+    /**
+     * Determine if the user can view any models.
+     *
+     * @param  string|null  $model
+     * @return bool
+     */
+    public static function authorizedToViewAny(Request $request)
+    {
+        $user = $request->user();
+
+        return $user && $request->user()->can('viewAnyProject');
+    }
+
+    public function authorizedToView(Request $request)
+    {
+
+        $user = $request->user();
+
+        // Determina si el usuario puede ver este recurso en particular
+        return $user && $request->user()->can('viewProject', $this->resource) && $this->user_id === $user->id;
+    }
+
+    /**
+     * Determine if the user can create models.
+     *
+     * @return bool
+     */
+    public static function authorizedToCreate(Request $request)
+    {
+        $user = $request->user();
+
+        return $user && $request->user()->can('createProject');
+    }
+
+    /**
+     * Determine if the user can update the given model.
+     *
+     * @return bool
+     */
+    public function authorizedToUpdate(Request $request)
+    {
+        $user = $request->user();
+
+        return $user && $request->user()->can('updateProject') && $this->user_id === $user->id;
+    }
+
+    /**
+     * Determine if the user can delete the given model.
+     *
+     * @return bool
+     */
+    public function authorizedToDelete(Request $request)
+    {
+        $user = $request->user();
+
+        return $user && $request->user()->can('deleteProject') && $this->user_id === $user->id;
+    }
+
+    public static function indexQuery(NovaRequest $request, $query)
+    {
+        $user = $request->user();
+
+        if (! $user) {
+            return $query->whereRaw('1 = 0'); // No devuelve resultados si no hay usuario.
+        }
+
+        return $query->where('user_id', $user->id);
     }
 }

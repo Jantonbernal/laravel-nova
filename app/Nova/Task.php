@@ -43,8 +43,8 @@ class Task extends Resource
     {
         return [
             ID::make()->sortable(),
-            Text::make('name')->sortable()->rules('required', 'max:255'),
-            BelongsTo::make('Project'),
+            Text::make('Nombre', 'name')->sortable()->rules('required', 'max:255'),
+            BelongsTo::make('Proyecto', 'Project', Project::class),
         ];
     }
 
@@ -95,8 +95,20 @@ class Task extends Resource
      */
     public function menu(Request $request)
     {
-        return parent::menu($request)->withBadge(function () {
-            return static::$model::count();
+        // return parent::menu($request)->withBadge(function () {
+        //     return static::$model::count();
+        // });
+
+        $user = $request->user();
+
+        // Si no hay usuario autenticado, devolver el menú sin un contador
+        if (! $user) {
+            return parent::menu($request);
+        }
+
+        return parent::menu($request)->withBadge(function () use ($user) {
+            // Filtrar los registros relacionados con el usuario autenticado
+            return static::$model::where('user_id', $user->id)->count();
         });
     }
 
@@ -114,5 +126,73 @@ class Task extends Resource
 
             $model->name = 'Duplicate of '.$model->name;
         });
+    }
+
+    /**
+     * Determine if the user can view any models.
+     *
+     * @param  string|null  $model
+     * @return bool
+     */
+    public static function authorizedToViewAny(Request $request)
+    {
+        $user = $request->user();
+
+        return $user && $request->user()->can('viewAnyTask');
+    }
+
+    public function authorizedToView(Request $request)
+    {
+        // Determina si el usuario puede ver este recurso en particular
+        $user = $request->user();
+
+        return $user && $request->user()->can('viewTask', $this->resource) && $this->user_id === $user->id;
+    }
+
+    /**
+     * Determine if the user can create models.
+     *
+     * @return bool
+     */
+    public static function authorizedToCreate(Request $request)
+    {
+        $user = $request->user();
+
+        return $user && $request->user()->can('createTask');
+    }
+
+    /**
+     * Determine if the user can update the given model.
+     *
+     * @return bool
+     */
+    public function authorizedToUpdate(Request $request)
+    {
+        $user = $request->user();
+
+        return $user && $request->user()->can('updateTask') && $this->user_id === $user->id;
+    }
+
+    /**
+     * Determine if the user can delete the given model.
+     *
+     * @return bool
+     */
+    public function authorizedToDelete(Request $request)
+    {
+        $user = $request->user();
+
+        return $user && $request->user()->can('deleteTask') && $this->user_id === $user->id;
+    }
+
+    public static function indexQuery(NovaRequest $request, $query)
+    {
+        $user = $request->user();
+
+        if (! $user) {
+            return $query->whereRaw('1 = 0'); // No devuelve resultados si no hay usuario.
+        }
+
+        return $query->where('user_id', $user->id);
     }
 }

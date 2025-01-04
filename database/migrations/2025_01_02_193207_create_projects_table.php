@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('projects', function (Blueprint $table) {
             $table->id();
             $table->string('name')->comment('Nombre del proyecto');
+            $table->foreignId('user_id')->comment('Relación con el usuario')->constrained('users');
             $table->timestamps();
         });
     }

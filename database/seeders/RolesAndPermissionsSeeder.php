@@ -57,5 +57,12 @@ class RolesAndPermissionsSeeder extends Seeder
         $role = Role::create(['name' => 'lector']);
         $role->givePermissionTo([8]);
 
+        // Registrar usuarios de prueba de tipo lector
+        $customers = User::factory()->count(5)->create();
+
+        // Para cada customer, crear users y asignar el customer
+        $customers->each(function ($customer) {
+            $customer->assignRole('lector');
+        });
     }
 }

@@ -16,7 +16,20 @@ class NewProjects extends Value
      */
     public function calculate(NovaRequest $request): ValueResult
     {
-        return $this->count($request, Project::class);
+        // return $this->count($request, Project::class);
+
+        // Filtrar las tareas asignadas al usuario autenticado
+        $user = $request->user();
+
+        if (! $user) {
+            // Si no hay usuario autenticado, devolver un valor por defecto
+            return $this->result(0);
+        }
+
+        // Filtrar las tareas asignadas al usuario autenticado
+        $tasksQuery = Project::where('user_id', $user->id);
+
+        return $this->count($request, $tasksQuery);
     }
 
     /**

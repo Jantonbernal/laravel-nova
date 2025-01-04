@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name')->comment('Nombre de la tarea');
             $table->foreignId('project_id')->comment('Relación con el proyecto')->constrained('projects');
+            $table->foreignId('user_id')->comment('Relación con el usuario')->constrained('users');
             $table->timestamps();
         });
     }

@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Project;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -20,9 +21,13 @@ class TaskFactory extends Factory
         $projects = Project::pluck('id');
         $projectSelected = fake()->randomElement($projects);
 
+        $users = User::pluck('id');
+        $userSelected = fake()->randomElement($users);
+
         return [
             'name' => fake()->name(),
             'project_id' => $projectSelected,
+            'user_id' => $userSelected,
         ];
     }
 }
