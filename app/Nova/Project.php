@@ -2,6 +2,7 @@
 
 namespace App\Nova;
 
+use App\Nova\Policies\ProjectPolicy;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\ID;
@@ -11,6 +12,13 @@ use Laravel\Nova\Resource;
 
 class Project extends Resource
 {
+    /**
+     * The policy the resource corresponds to.
+     *
+     * @var class-string
+     */
+    public static $policy = ProjectPolicy::class;
+
     /**
      * The model the resource corresponds to.
      *
@@ -102,9 +110,25 @@ class Project extends Resource
             return parent::menu($request);
         }
 
-        return parent::menu($request)->withBadge(function () use ($user) {
-            // Filtrar los registros relacionados con el usuario autenticado
-            return static::$model::where('user_id', $user->id)->count();
+        // Obtener el rol del usuario
+        $role = $user->roles()->first();
+
+        return parent::menu($request)->withBadge(function () use ($user, $role) {
+            // Si no hay rol, no mostrar el contador
+            if (! $role) {
+                return 0;
+            }
+
+            // Filtrar proyectos según el rol
+            $projectsQuery = static::$model::query();
+
+            if ($role->name === 'super-admin') {
+                // super-admin ve todos los proyectos
+                return $projectsQuery->count();
+            }
+
+            // Filtrar proyectos asignados al usuario autenticado
+            return $projectsQuery->where('user_id', $user->id)->count();
         });
     }
 
@@ -122,64 +146,6 @@ class Project extends Resource
 
             $model->name = 'Duplicate of '.$model->name;
         });
-    }
-
-    /**
-     * Determine if the user can view any models.
-     *
-     * @param  string|null  $model
-     * @return bool
-     */
-    public static function authorizedToViewAny(Request $request)
-    {
-        $user = $request->user();
-
-        return $user && $request->user()->can('viewAnyProject');
-    }
-
-    public function authorizedToView(Request $request)
-    {
-
-        $user = $request->user();
-
-        // Determina si el usuario puede ver este recurso en particular
-        return $user && $request->user()->can('viewProject', $this->resource) && $this->user_id === $user->id;
-    }
-
-    /**
-     * Determine if the user can create models.
-     *
-     * @return bool
-     */
-    public static function authorizedToCreate(Request $request)
-    {
-        $user = $request->user();
-
-        return $user && $request->user()->can('createProject');
-    }
-
-    /**
-     * Determine if the user can update the given model.
-     *
-     * @return bool
-     */
-    public function authorizedToUpdate(Request $request)
-    {
-        $user = $request->user();
-
-        return $user && $request->user()->can('updateProject') && $this->user_id === $user->id;
-    }
-
-    /**
-     * Determine if the user can delete the given model.
-     *
-     * @return bool
-     */
-    public function authorizedToDelete(Request $request)
-    {
-        $user = $request->user();
-
-        return $user && $request->user()->can('deleteProject') && $this->user_id === $user->id;
     }
 
     public static function indexQuery(NovaRequest $request, $query)

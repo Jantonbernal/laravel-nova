@@ -24,8 +24,24 @@ class NewTasks extends Value
             return $this->result(0);
         }
 
-        // Filtrar las tareas asignadas al usuario autenticado
-        $tasksQuery = Task::where('user_id', $user->id);
+        // Obtener el rol del usuario
+        $role = $user->roles()->first();
+
+        if (! $role) {
+            // Si el usuario no tiene un rol asignado, devolver un valor por defecto
+            return $this->result(0);
+        }
+
+        // Filtrar proyectos en base al rol
+        $tasksQuery = Task::query();
+
+        if ($role->name === 'super-admin') {
+            // super-admin ve todos los proyectos
+            return $this->count($request, $tasksQuery);
+        } else {
+            // Filtrar los proyectos asignadas al usuario autenticado
+            $tasksQuery = Task::where('user_id', $user->id);
+        }
 
         return $this->count($request, $tasksQuery);
     }

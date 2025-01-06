@@ -16,8 +16,6 @@ class NewProjects extends Value
      */
     public function calculate(NovaRequest $request): ValueResult
     {
-        // return $this->count($request, Project::class);
-
         // Filtrar las tareas asignadas al usuario autenticado
         $user = $request->user();
 
@@ -26,10 +24,26 @@ class NewProjects extends Value
             return $this->result(0);
         }
 
-        // Filtrar las tareas asignadas al usuario autenticado
-        $tasksQuery = Project::where('user_id', $user->id);
+        // Obtener el rol del usuario
+        $role = $user->roles()->first();
 
-        return $this->count($request, $tasksQuery);
+        if (! $role) {
+            // Si el usuario no tiene un rol asignado, devolver un valor por defecto
+            return $this->result(0);
+        }
+
+        // Filtrar proyectos en base al rol
+        $projectsQuery = Project::query();
+
+        if ($role->name === 'super-admin') {
+            // super-admin ve todos los proyectos
+            return $this->count($request, $projectsQuery);
+        } else {
+            // Filtrar los proyectos asignadas al usuario autenticado
+            $projectsQuery = Project::where('user_id', $user->id);
+        }
+
+        return $this->count($request, $projectsQuery);
     }
 
     /**

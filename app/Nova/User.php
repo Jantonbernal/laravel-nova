@@ -2,7 +2,7 @@
 
 namespace App\Nova;
 
-use Illuminate\Http\Request;
+use App\Nova\Policies\UserPolicy;
 use Laravel\Nova\Fields\Email;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\MorphToMany;
@@ -18,6 +18,13 @@ class User extends Resource
      * @var class-string<\App\Models\User>
      */
     public static $model = \App\Models\User::class;
+
+    /**
+     * The policy the resource corresponds to.
+     *
+     * @var class-string
+     */
+    public static $policy = UserPolicy::class;
 
     /**
      * The single value that should be used to represent the resource when being displayed.
@@ -107,62 +114,5 @@ class User extends Resource
 
             $model->name = 'Duplicate of '.$model->name;
         });
-    }
-
-    /**
-     * Determine if the user can view any models.
-     *
-     * @param  string|null  $model
-     * @return bool
-     */
-    public static function authorizedToViewAny(Request $request)
-    {
-        $user = $request->user();
-
-        return $user && $request->user()->can('viewAnyTask');
-    }
-
-    public function authorizedToView(Request $request)
-    {
-        // Determina si el usuario puede ver este recurso en particular
-        $user = $request->user();
-
-        return $user && $request->user()->can('viewTask', $this->resource);
-    }
-
-    /**
-     * Determine if the user can create models.
-     *
-     * @return bool
-     */
-    public static function authorizedToCreate(Request $request)
-    {
-        $user = $request->user();
-
-        return $user && $request->user()->can('createTask');
-    }
-
-    /**
-     * Determine if the user can update the given model.
-     *
-     * @return bool
-     */
-    public function authorizedToUpdate(Request $request)
-    {
-        $user = $request->user();
-
-        return $user && $request->user()->can('updateTask');
-    }
-
-    /**
-     * Determine if the user can delete the given model.
-     *
-     * @return bool
-     */
-    public function authorizedToDelete(Request $request)
-    {
-        $user = $request->user();
-
-        return $user && $request->user()->can('deleteTask');
     }
 }
