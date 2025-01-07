@@ -3,6 +3,7 @@
 namespace App\Nova;
 
 use App\Nova\Policies\TaskPolicy;
+use Ebess\AdvancedNovaMediaLibrary\Fields\Images;
 use Illuminate\Http\Request;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\ID;
@@ -53,6 +54,13 @@ class Task extends Resource
             ID::make()->sortable(),
             Text::make('Nombre', 'name')->sortable()->rules('required', 'max:255'),
             BelongsTo::make('Proyecto', 'Project', Project::class),
+            BelongsTo::make('Usuario', 'User', User::class),
+
+            Images::make('Images', 'images') // 'images' debe coincidir con la colección registrada en el modelo
+                ->conversionOnIndexView('thumb') // Conversión usada en la vista del índice
+                ->conversionOnDetailView('thumb') // Conversión usada en la vista de detalle
+                ->conversionOnForm('thumb') // Conversión usada en los formularios
+                ->rules('required'), // Reglas de validación
         ];
     }
 
